@@ -1,0 +1,69 @@
+import requests
+
+def Getting_BTC():
+    BTCurl = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin&order=market_cap_desc&per_page=100&page=1&sparkline=false&locale=en'
+    BTCresponse = requests.get(BTCurl)
+    BTCjson = BTCresponse.json()
+    #print(BTCjson)
+
+    for a in BTCjson:
+        BTC_Daily_HIGH = a['high_24h']
+        BTC_Daily_LOW = a['low_24h']
+        RAW_DATE = a['last_updated']
+        DATE = "'" + RAW_DATE + "'"
+
+    # Adding them into the table
+    query = f"""
+        INSERT INTO BlockchainAPI.dbo_DAILY_PRICE_HIGH_LOW VALUES ('BTC',{BTC_Daily_HIGH},{BTC_Daily_LOW},{DATE}) 
+        """
+    
+    # Using spark.sql to execute the query
+    spark.sql(query)
+    print('Success in inserting')
+        
+
+def Getting_ETH():
+    ETHurl = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=ethereum&order=market_cap_desc&per_page=100&page=1&sparkline=false&locale=en'
+    ETHresponse = requests.get(ETHurl)
+    ETHjson = ETHresponse.json()
+
+    for a in ETHjson:
+        ETH_Daily_HIGH = a['high_24h']
+        ETH_Daily_LOW = a['low_24h']
+        RAW_DATE = a['last_updated']
+        DATE = "'" + RAW_DATE + "'"
+    
+    # Adding them into the table
+    query = f"""
+        INSERT INTO BlockchainAPI.dbo_DAILY_PRICE_HIGH_LOW VALUES ('ETH',{ETH_Daily_HIGH},{ETH_Daily_LOW},{DATE}) 
+        """
+    
+    
+    # Using spark.sql to execute the query
+    spark.sql(query)
+    print('Success in inserting')
+        
+
+def Getting_XRP():
+    XRPurl = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=ripple&order=market_cap_desc&per_page=100&page=1&sparkline=false&locale=en'
+    XRPresponse = requests.get(XRPurl)
+    XRPjson = XRPresponse.json()
+
+    for a in XRPjson:
+        XRP_Daily_HIGH = a['high_24h']
+        XRP_Daily_LOW = a['low_24h']
+        RAW_DATE = a['last_updated']
+        DATE = "'" + RAW_DATE + "'"
+    
+    # Adding them into the table
+    query = f"""
+        INSERT INTO BlockchainAPI.dbo_DAILY_PRICE_HIGH_LOW VALUES ('XRP',{XRP_Daily_HIGH},{XRP_Daily_LOW},{DATE}) 
+        """
+    
+    
+    # Using spark.sql to execute the query
+    spark.sql(query)
+    print('Success in inserting')
+
+Getting_BTC()
+Getting_ETH()
