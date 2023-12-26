@@ -1,0 +1,329 @@
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import requests
+from datetime import datetime
+
+#Replace {----YOUR API KEY-----} and {----EMAIL DETAILS----} with your own
+def BTChour():
+    #URL containing the data
+    url = "https://bitcoinaverage-global-bitcoin-index-v1.p.rapidapi.com/indices/local/ticker/BTCUSD/changes"
+
+    headers = {
+    	"X-RapidAPI-Key": "{------YOUR API KEY ------}",
+    	"X-RapidAPI-Host": "bitcoinaverage-global-bitcoin-index-v1.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers)
+    JSONresponse = response.json()
+
+    #Assigning variables to the data
+    BHOURchange = JSONresponse['changes']['percent']['hour']
+    BHOURprice = JSONresponse['open']['hour']
+    BHOURvolume = JSONresponse['volume']
+    BHOURvolumeP = JSONresponse['volume_percent']
+    RAWtimestamp = JSONresponse['timestamp']
+
+    # Convert to a human-readable date and time
+    date_time = datetime.utcfromtimestamp(RAWtimestamp)
+
+    #Saving to table
+    query = f"""
+        Update BlockchainAPI.dbo_HOURLY_PRICE_LIVE 
+        SET Token_Price = {BHOURprice}, Token_Hourly_Change = {BHOURchange}
+        WHERE Token_Symbol = 'BTC'
+    """
+
+    spark.sql(query)
+    print('Success BTC')
+    return BHOURchange, BHOURprice, BHOURvolume, BHOURvolumeP
+
+def ETHhour():
+    #URL containing the data
+    url = "https://bitcoinaverage-global-bitcoin-index-v1.p.rapidapi.com/indices/local/ticker/ETHUSD/changes"
+
+    headers = {
+    	"X-RapidAPI-Key": "{------YOUR API KEY ------}",
+    	"X-RapidAPI-Host": "bitcoinaverage-global-bitcoin-index-v1.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers)
+    JSONresponse = response.json()
+
+    #Assigning variables to the data
+    EHOURchange = JSONresponse['changes']['percent']['hour']
+    EHOURprice = JSONresponse['open']['hour']
+    EHOURvolume = JSONresponse['volume']
+    EHOURvolumeP = JSONresponse['volume_percent']
+    RAWtimestamp = JSONresponse['timestamp']
+
+    # Convert to a human-readable date and time
+    date_time = datetime.utcfromtimestamp(RAWtimestamp)
+
+    #Saving to table
+    query = f"""
+        Update BlockchainAPI.dbo_HOURLY_PRICE_LIVE 
+        SET Token_Price = {EHOURprice}, Token_Hourly_Change = {EHOURchange}
+        WHERE Token_Symbol = 'ETH'
+    """
+
+    #spark.sql(query)
+    print('Success ETH')
+    return EHOURchange, EHOURprice, EHOURvolume, EHOURvolumeP
+
+def XRPhour():
+    #URL containing the data
+    url = "https://bitcoinaverage-global-bitcoin-index-v1.p.rapidapi.com/indices/local/ticker/XRPUSD/changes"
+
+    headers = {
+    	"X-RapidAPI-Key": "{------YOUR API KEY ------}",
+    	"X-RapidAPI-Host": "bitcoinaverage-global-bitcoin-index-v1.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers)
+    JSONresponse = response.json()
+
+    #Assigning variables to the data
+    XHOURchange = JSONresponse['changes']['percent']['hour']
+    XHOURprice = JSONresponse['open']['hour']
+    XHOURvolume = JSONresponse['volume']
+    XHOURvolumeP = JSONresponse['volume_percent']
+    RAWtimestamp = JSONresponse['timestamp']
+
+    # Convert to a human-readable date and time
+    date_time = datetime.utcfromtimestamp(RAWtimestamp)
+
+    #Saving to table
+    query = f"""
+        Update BlockchainAPI.dbo_HOURLY_PRICE_LIVE 
+        SET Token_Price = {XHOURprice}, Token_Hourly_Change = {XHOURchange}
+        WHERE Token_Symbol = 'XRP'
+    """
+
+    spark.sql(query)
+    print('Success XRP')
+    return XHOURchange, XHOURprice, XHOURvolume, XHOURvolumeP, date_time
+
+def BTCnews():
+    url = 'https://cryptonews-api.com/api/v1?tickers=BTC&items=3&page=1&token={------YOUR API KEY ------}'
+    response = requests.get(url)
+    JSONresponse = response.json()
+
+    BTC_title_news = JSONresponse['data'][0]['title']
+    BTC_title_news_link = JSONresponse['data'][0]['news_url']
+
+    return BTC_title_news, BTC_title_news_link
+
+def ETHnews():
+    url = 'https://cryptonews-api.com/api/v1?tickers=ETH&items=3&page=1&token={------YOUR API KEY ------}'
+    response = requests.get(url)
+    JSONresponse = response.json()
+
+    ETH_title_news = JSONresponse['data'][0]['title']
+    ETH_title_news_link = JSONresponse['data'][0]['news_url']
+
+    return ETH_title_news, ETH_title_news_link
+
+def XRPnews():
+    url = 'https://cryptonews-api.com/api/v1?tickers=XRP&items=3&page=1&token={------YOUR API KEY ------}'
+    response = requests.get(url)
+    JSONresponse = response.json()
+
+    XRP_title_news = JSONresponse['data'][0]['title']
+    XRP_title_news_link = JSONresponse['data'][0]['news_url']
+
+    return XRP_title_news, XRP_title_news_link
+
+def Sending_Alert():
+    XHOURchange, XHOURprice, XHOURvolume, XHOURvolumeP, date_time = XRPhour()
+    BHOURchange, BHOURprice, BHOURvolume, BHOURvolumeP = BTChour()
+    EHOURchange, EHOURprice, EHOURvolume, EHOURvolumeP = ETHhour()
+    XRP_title_news, XRP_title_news_link = XRPnews()
+    ETH_title_news, ETH_title_news_link = ETHnews()
+    BTC_title_news, BTC_title_news_link = BTCnews()
+
+    #Formating Data --- Creating consistent values within eg all prices are £20.00
+    XRP ='XRP'
+    BTC = 'BTC'
+    ETH = 'ETH'
+
+    XHOURchangeF = round(float(XHOURchange),2)
+    XHOURpriceF = round(float(XHOURprice),2)
+    XHOURvolumeF = round(float(XHOURvolume),2)
+    XHOURvolumeF2 = round(float(XHOURvolumeP),2)
+    
+    BHOURchangeF = round(float(BHOURchange),2)
+    BHOURpriceF = round(float(BHOURprice),2)
+    BHOURvolumeF = round(float(BHOURvolume),2)
+    BHOURvolumeF2 = round(float(BHOURvolumeP),2)
+    
+    EHOURchangeF = round(float(EHOURchange),2)
+    EHOURpriceF = round(float(EHOURprice),2)
+    EHOURvolumeF = round(float(EHOURvolume),2)
+    EHOURvolumeF2 = round(float(EHOURvolumeP),2)
+    
+    #Formating the colour and creating algorithm
+    #If the volume percentage change is above 70%
+    #Then if the Price change is above or below 10 then highlighted red/ green
+    #---BTC
+    Bhtmlcolor = 'black'
+    Bhtmlcolor2 = 'grey'
+    
+    if BHOURvolumeF2 > 70:
+        if BHOURchangeF > 10:
+            Bhtmlcolor = 'green'
+            Bhtmlcolor2 = 'black'
+        elif BHOURchangeF < -10:
+            Bhtmlcolor = 'red'
+            Bhtmlcolor2 = 'black'
+
+    #---ETH
+    Ehtmlcolor = 'black'
+    Ehtmlcolor2 = 'grey'
+    if EHOURvolumeF2 > 70:
+        if EHOURchangeF > 10:
+            Ehtmlcolor = 'green'
+            Ehtmlcolor2 = 'black'
+        elif EHOURchangeF < -10:
+            Ehtmlcolor = 'red'
+            Ehtmlcolor2 = 'black'
+
+    #---XRP
+    htmlcolor = 'black'
+    htmlcolor2 = 'grey'
+    if XHOURvolumeF2 > 70:
+        if XHOURchangeF > 10:
+            htmlcolor = 'green'
+            htmlcolor2 = 'black'
+        elif XHOURchangeF < -10:
+            htmlcolor = 'red'
+            htmlcolor2 = 'black'
+
+
+
+    #Establishing connetion to the table in fabric
+    Email_Data_Path = "{-----YOUR PATH TO THE EMAIL TABLE IN YOUR DATABASE-----}"
+    Email_Data = spark.read.format("delta").load(Email_Data_Path)
+
+    #Creating a loop to send email to all the people in that table
+    for a in Email_Data.rdd.collect():
+        Reciever_Name = a["Name"]
+        Reciever_Email = a["Email"]
+    
+        with smtplib.SMTP("smtp-mail.outlook.com", 587) as server:
+            
+            #My details/ email which will be sending everything
+            password = "{-----Email Details-----}" 
+            Sender_email = "{-----Email Details-----}"
+            
+
+            message = MIMEMultipart("alternative")
+            message["Subject"] = "CRYPTO ALERT LEARNING"
+            message["From"] = Sender_email
+            message["To"] = Reciever_Email  # Join the recipients into a single string
+
+
+            # write the text/plain part
+            text = f"""\
+            Hello {Reciever_Name},
+            Here are the hourly alerts of the following Cryptos {BTC},{ETH},{XRP}. In this email below each Crypto will signal where there is MOVEMENT or NONE which will be highlighted if any of our conditions are met. (MOVEMENT will be highlighted when certain conditions are met)
+            Time of Data Collected: {date_time}
+
+            BTC price {BHOURprice} / Hour Change: {BHOURchange}% / Volume|Percentage change: {BHOURvolumeF}|{BHOURvolumeF2}%
+            MOVEMENT OR NONE
+            {BTC_title_news_link}
+
+            ETH price {EHOURprice} / Hour Change: {EHOURchange}% / Volume|Percentage change: {EHOURvolumeF}|{BHOURvolumeF2}%
+            MOVEMENT OR NONE
+            {ETH_title_news_link}
+
+            XRP price {XHOURprice} / Hour Change: {XHOURchange}% / Volume|Percentage change: {XHOURvolumeF}|{BHOURvolumeF2}%
+            MOVEMENT OR NONE
+            {XRP_title_news_link}
+
+
+            Feel free to fill the survey and let us know what other content would be useful for you or how we can improve our service!
+            https://www.surveymonkey.com/r/2S7GHSV"""
+
+            # write the HTML part. https://hive3.com/wp-content/uploads/2022/01/2.png
+            html = f"""\
+                <html>
+                <body>
+                <center>
+                    <table style="margin: 0 auto; max-width: 500px;">
+                        <tbody>
+                            <tr>
+                                <td style="font-family: Brown,Helvetica Neue,Helvetica,Arial,sans-serif;font-size:25px; font-weight: 1000"><center><strong>CRYPTO CURRENCY PRICE ALERTS</strong></td>
+                            </tr>
+                            <tr>
+                                <p>Hello {Reciever_Name},<br>
+                                    Here are the <strong>Hourly Alerts</strong> of the following Cryptos: <strong> {BTC},{ETH},{XRP}</strong>. In this email below each Crypto will signal where there is <strong>MOVEMENT</strong> or <strong>NONE</strong> which will be highlighted if any of our conditions are met. (MOVEMENT will be highlighted either Green or Red when certain conditions are met)</td>               
+                            </tr>
+                            <tr>
+                                <p>'M' = Million. Time of Data Collected: <strong>{date_time}</strong></td>
+                            </tr>
+                            <tr>
+                                <h2><strong style="color: orange"> BTC: </strong></h2>
+                                    <p>Price: <strong>${BHOURpriceF}</strong><br>
+                                        Hour Change: <strong style="color: {'red' if BHOURchangeF < 0 else 'green'};">{BHOURchangeF}%</strong><br>
+                                            AVG Volume: <strong>${BHOURvolumeF}(M)</strong> <br>
+                                                AVG Percentage Change: <strong>{BHOURvolumeF2}% </strong><br>
+                                                    <strong style="color: {Bhtmlcolor};"> MOVEMENT</strong> or <strong style="color: {Bhtmlcolor2};"> NONE </strong><br>
+                                                        <a href={BTC_title_news_link}>{BTC_title_news}<br></p>
+                            </tr>
+                            <tr>
+                                <h2><strong style="color: orange"> ETH: </strong></h2>
+                                    <p>Price: <strong>${EHOURpriceF}</strong><br>
+                                        Hour Change: <strong style="color: {'red' if EHOURchangeF < 0 else 'green'};">{EHOURchangeF}%</strong><br>
+                                            AVG Volume: <strong>${EHOURvolumeF}(M)</strong> <br>
+                                                AVG Percentage Change: <strong>{EHOURvolumeF2}% </strong><br>
+                                                    <strong style="color: {Ehtmlcolor};"> MOVEMENT</strong> or <strong style="color: {Ehtmlcolor2};"> NONE </strong><br>
+                                                        <a href={ETH_title_news_link}>{ETH_title_news}<br></p>
+                            </tr>
+                            <tr>
+                                <h2><strong style="color: orange"> XRP: </strong></h2>
+                                    <p>Price: <strong>${XHOURpriceF}</strong><br>
+                                        Hour Change: <strong style="color: {'red' if XHOURchangeF < 0 else 'green'};">{XHOURchangeF}%</strong><br>
+                                            AVG Volume: <strong>${XHOURvolumeF}(M)</strong> <br>
+                                                AVG Percentage Change: <strong>{XHOURvolumeF2}% </strong><br>
+                                                    <strong style="color: {htmlcolor};"> MOVEMENT</strong> or <strong style="color: {htmlcolor2};"> NONE </strong><br>
+                                                        <a href={XRP_title_news_link}>{XRP_title_news}<br></p>
+                            </tr>
+                            <tr>
+                                <p>Feel free to <strong>fill the survey and let us</strong> know what other content would be useful for you or how we can improve our service!</td>
+                            </tr>
+                            <tr>
+                                <p><a href="https://www.surveymonkey.com/r/2S7GHSV">Are you free to take a quick survey?<br></p>
+                            </tr>
+                            <tr>
+                                <img src='https://hive3.com/wp-content/uploads/2022/01/2.png' width="200" style="display: block; margin: 0 auto;">
+                        </tbody>
+                    </table>
+                    <br>
+                    <br>
+                    <br>
+                    </body>
+                    </html>
+                """
+
+            #   convert both parts to MIMEText objects and add them to the MIMEMultipart message
+            part1 = MIMEText(text, "plain")
+            part2 = MIMEText(html, "html")
+            message.attach(part1)
+            message.attach(part2)
+
+            # sending the email
+            with smtplib.SMTP("smtp-mail.outlook.com", 587) as server:
+
+                server.ehlo('mylowercasehost')
+                server.starttls()
+                server.ehlo('mylowercasehost')
+    
+                server.login(Sender_email, password)
+                server.sendmail(Sender_email,Reciever_Email, message.as_string())
+                #Reciever_Email
+
+
+        print(f'Email Sent to {Reciever_Name} with the email {Reciever_Email}')
+
+Sending_Alert()
