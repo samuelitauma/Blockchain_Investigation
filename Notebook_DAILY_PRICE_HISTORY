@@ -1,0 +1,112 @@
+#Make sure you have Moralis package installed
+pip install Moralis
+
+from moralis import evm_api
+from datetime import datetime
+
+
+class Moralis_Cypto_Function:
+
+    def __init__(self): 
+        self.api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImRmMjQ5OWYwLTg0NzQtNGQ2Ni1iNTgwLWM4Mjk5NTg1OWMxOSIsIm9yZ0lkIjoiMzY2MTYxIiwidXNlcklkIjoiMzc2MzE2IiwidHlwZUlkIjoiYmVlZGE2MGMtYTVjYi00YTViLTgyZmQtZTM3Y2E2N2IxN2VlIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDExODY1MDgsImV4cCI6NDg1Njk0NjUwOH0.UO6SRu6I2zfSAe4C31EQTBw-jVB5ycycCYQ-C0SpVF8"
+        self.params = {
+            "address": '',
+            "include": "percent_change",
+            "chain": ''
+        }
+
+    def Getting_BTC(self):
+        #Tailoring the correct Address and Chain for BTC
+        self.params['address'] = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599'
+        self.params['chain'] =  'eth'
+        BTCparams = self.params
+    
+        #Collecting the token details
+        result = evm_api.token.get_token_price(
+            api_key=self.api_key,
+            params=BTCparams)
+
+        # Getting the current date and time
+        dateRAW = datetime.now()
+        dateNOW = "'" +  str(dateRAW) + "'"
+
+        
+        #Getting BTC crypto data
+        BTC_TOKEN = 'BTC'
+        BTC_LIVE_PRICE = result['usdPrice']
+
+        # Adding them into the table
+        query = f"""
+            INSERT INTO BlockchainAPI.dbo_DAILY_PRICE_HISTORY VALUES ('BTC',{BTC_LIVE_PRICE},{dateNOW})
+        """
+    
+        # Using spark.sql to execute the query
+        spark.sql(query)
+        print('Success in inserting BTC')
+
+    def Getting_ETH(self):
+        #Tailoring the correct Address and Chain for ETH
+        self.params['address'] = '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0'
+        self.params['chain'] =  'eth'
+        ETHparams = self.params
+    
+        #Collecting the token details
+        result = evm_api.token.get_token_price(
+            api_key=self.api_key,
+            params=ETHparams)
+
+        # Getting the current date and time
+        dateRAW = datetime.now()
+        dateNOW = "'" +  str(dateRAW) + "'"
+
+        
+        #Getting ETH crypto data
+        ETH_TOKEN = 'ETH'
+        ETH_LIVE_PRICE = result['usdPrice']
+
+        # Adding them into the table
+        query = f"""
+            INSERT INTO BlockchainAPI.dbo_DAILY_PRICE_HISTORY VALUES ('ETH',{ETH_LIVE_PRICE},{dateNOW})
+        """
+    
+        # Using spark.sql to execute the query
+        spark.sql(query)
+        print('Success in inserting ETH')
+
+    def Getting_XRP(self):
+        #Tailoring the correct Address and Chain for XRP
+        self.params['address'] = '0x1d2f0da169ceb9fc7b3144628db156f3f6c60dbe'
+        self.params['chain'] =  'bsc'
+        XRPparams = self.params
+    
+        #Collecting the token details
+        result = evm_api.token.get_token_price(
+            api_key=self.api_key,
+            params=XRPparams)
+        
+        # Getting the current date and time
+        dateRAW = datetime.now()
+        dateNOW = "'" +  str(dateRAW) + "'"
+
+        #Getting XRP crypto data
+        XRP_TOKEN = 'XRP'
+        XRP_LIVE_PRICE = result['usdPrice']
+
+        # Adding them into the table
+        query = f"""
+            INSERT INTO BlockchainAPI.dbo_DAILY_PRICE_HISTORY VALUES ('XRP',{XRP_LIVE_PRICE},{dateNOW})
+        """
+    
+        # Using spark.sql to execute the query
+        spark.sql(query)
+        print('Success in inserting XRP')
+
+    def Saving_Data_to_FABRIC(self):
+        #Collecting the values from the Getting functions
+        self.Getting_XRP()
+        self.Getting_BTC()
+        self.Getting_ETH()
+        
+
+Crypto_Function = Moralis_Cypto_Function()
+Crypto_Function.Saving_Data_to_FABRIC()
