@@ -1,0 +1,76 @@
+#Bitcoin Collecting
+import requests
+
+def BTC_collecting():
+    BTCurl = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin&order=market_cap_desc&per_page=100&page=1&sparkline=false&locale=en'
+    BTCresponse = requests.get(BTCurl)
+    BTCjson = BTCresponse.json()
+    #print(BTCjson)
+
+    for a in BTCjson:
+        BTC_ATH = a["ath"]
+        RAW_BTC_ATH_DATE = a['ath_date']
+        BTC_ATH_DATE = "'" + RAW_BTC_ATH_DATE + "'"
+
+        print(BTC_ATH,BTC_ATH_DATE)
+
+        # Adding them into the table
+        query = f"""
+            UPDATE BlockchainAPI.dbo_ALLTIMEHIGH_DATA
+            SET Token_ALT_PRICE = {BTC_ATH} , Token_ALT_DATE = {BTC_ATH_DATE}
+            WHERE Token_Symbol = 'BTC';
+        """
+    
+        # Using spark.sql to execute the query
+        spark.sql(query)
+        print('Success in inserting')
+
+def ETH_collecting():
+    ETHurl = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=ethereum&order=market_cap_desc&per_page=100&page=1&sparkline=false&locale=en'
+    ETHresponse = requests.get(ETHurl)
+    ETHjson = ETHresponse.json()
+
+    for a in ETHjson:
+        ETH_ATH = a['ath']
+        RAW_ETH_ATH_DATE = a['ath_date']
+        ETH_ATH_DATE = "'" + RAW_ETH_ATH_DATE + "'"
+
+        #print(ETH_ATH,ETH_ATH_DATE)
+
+        # Adding them into the table
+        query = f"""
+            UPDATE BlockchainAPI.dbo_ALLTIMEHIGH_DATA
+            SET Token_ALT_PRICE = {ETH_ATH} , Token_ALT_DATE = {ETH_ATH_DATE}
+            WHERE Token_Symbol = 'ETH';
+        """
+    
+        # Using spark.sql to execute the query
+        spark.sql(query)
+        print('Success in inserting')
+
+def XRP_collecting():
+    XRPurl = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=ripple&order=market_cap_desc&per_page=100&page=1&sparkline=false&locale=en'
+    XRPresponse = requests.get(XRPurl)
+    XRPjson = XRPresponse.json()
+
+    for a in XRPjson:
+        XRP_ATH = a['ath']
+        RAW_XRP_ATH_DATE = a['ath_date']
+        XRP_ATH_DATE = "'" + RAW_XRP_ATH_DATE + "'"
+
+        #print(XRP_ATH,XRP_ATH_DATE)
+
+        # Adding them into the table
+        query = f"""
+            UPDATE BlockchainAPI.dbo_ALLTIMEHIGH_DATA
+            SET Token_ALT_PRICE = {XRP_ATH} , Token_ALT_DATE = {XRP_ATH_DATE}
+            WHERE Token_Symbol = 'XRP';
+        """
+    
+        # Using spark.sql to execute the query
+        spark.sql(query)
+        print('Success in inserting')
+
+BTC_collecting()
+ETH_collecting()
+XRP_collecting()
