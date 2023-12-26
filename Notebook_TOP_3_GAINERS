@@ -1,0 +1,235 @@
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import requests
+from datetime import datetime
+
+#Insert your details in these areas{-----EMAIL DETAILS-------}, {----YOUR API KEY-----},{------EMAIL TABLE PATH-------}
+
+def Main_Function():
+    #Url connection
+    url = "https://cryptocurrency-markets.p.rapidapi.com/v1/markets/crypto/modules"
+
+    querystring = {"module":"gainer"}
+
+    headers = {
+	"X-RapidAPI-Key": "{----YOUR API KEY-----}",
+	"X-RapidAPI-Host": "cryptocurrency-markets.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers, params=querystring)
+    JSONresponse = response.json()
+
+    #Empty list
+    C_NAME_LIST = []
+    C_SYMBOL_LIST = []
+    PRICE_LIST = []
+    PRICE_CHANGE_LIST = [] 
+    #Creating loop to search through the Data
+    
+    No = 0
+    for a in JSONresponse['body']:
+
+        C_NAME = a['name']
+        C_SYMBOL = a['symbol']
+        PRICE = a['priceChange']['price']
+        PRICE_CHANGE = a['priceChange']['priceChange24h']
+        rawTIME_UPDATE = a['priceChange']['lastUpdate']
+        # Convert to a human-readable date and time
+        TIME_UPDATE = datetime.fromisoformat(rawTIME_UPDATE.rstrip('Z'))
+
+
+        C_NAME_LIST.append(C_NAME)
+        C_SYMBOL_LIST.append(C_SYMBOL)
+        PRICE_LIST.append(PRICE)
+        PRICE_CHANGE_LIST.append(PRICE_CHANGE) 
+
+        No += 1
+        if No >= 3 :
+            break
+
+    #Formatting 1st,2nd,3rd crypto coins
+    FIRST_NAME = C_NAME_LIST[0]
+    FIRST_SYMBOL = C_SYMBOL_LIST[0]
+    FIRST_PRICE = PRICE_LIST[0]
+    FIRST_PRICE_CHANGE = PRICE_CHANGE_LIST[0]
+
+    SECOND_NAME = C_NAME_LIST[1]
+    SECOND_SYMBOL = C_SYMBOL_LIST[1]
+    SECOND_PRICE = PRICE_LIST[1]
+    SECOND_PRICE_CHANGE = PRICE_CHANGE_LIST[1]
+
+    THIRD_NAME = C_NAME_LIST[2]
+    THIRD_SYMBOL = C_SYMBOL_LIST[2]
+    THIRD_PRICE = PRICE_LIST[2]
+    THIRD_PRICE_CHANGE = PRICE_CHANGE_LIST[2]
+
+    #Adding variables for the news functions
+    FIRST_NEWS(FIRST_SYMBOL)
+    SECOND_NEWS(SECOND_SYMBOL)
+    THIRD_NEWS(THIRD_SYMBOL)
+
+    #Sending Email
+    Sending_Email(FIRST_NAME,FIRST_SYMBOL,FIRST_PRICE,FIRST_PRICE_CHANGE,SECOND_NAME,SECOND_SYMBOL,SECOND_PRICE,SECOND_PRICE_CHANGE,THIRD_NAME,THIRD_SYMBOL,THIRD_PRICE,THIRD_PRICE_CHANGE,TIME_UPDATE)
+
+def FIRST_NEWS(FIRST_SYMBOL):
+    #Trying to get news otherwise it will return no news found 
+    try:
+        url = f'https://cryptonews-api.com/api/v1?tickers={FIRST_SYMBOL}&items=3&page=1&token={----YOUR API KEY-----}'
+        response = requests.get(url)
+        JSONresponse = response.json()
+        
+        FIRST_news = JSONresponse['data'][0]['title']
+        FIRST_title_news_link = JSONresponse['data'][0]['news_url']
+    except:
+        FIRST_news = 'NO NEWS FOUND'
+        FIRST_title_news_link = ""
+
+
+    return FIRST_news, FIRST_title_news_link
+
+def SECOND_NEWS(SECOND_SYMBOL):
+
+    try:
+        url = f'https://cryptonews-api.com/api/v1?tickers={SECOND_SYMBOL}&items=3&page=1&token={----YOUR API KEY-----}'
+        response = requests.get(url)
+        JSONresponse = response.json()
+        
+        SECOND_news = JSONresponse['data'][0]['title']
+        SECOND_title_news_link = JSONresponse['data'][0]['news_url']
+    except:
+        SECOND_news = "NO NEWS FOUND"
+        SECOND_title_news_link = ""
+
+    return SECOND_news, SECOND_title_news_link
+
+def THIRD_NEWS(THIRD_SYMBOL):
+    
+    try:
+        url = f'https://cryptonews-api.com/api/v1?tickers={THIRD_SYMBOL}&items=3&page=1&token={----YOUR API KEY-----}'
+        response = requests.get(url)
+        JSONresponse = response.json()
+        THIRD_news = JSONresponse['data'][0]['title']
+        THIRD_title_news_link = JSONresponse['data'][0]['news_url']
+    except:
+        THIRD_news = "NO NEWS FOUND"
+        THIRD_title_news_link = ""
+
+    return THIRD_news, THIRD_title_news_link
+
+def Sending_Email(FIRST_NAME,FIRST_SYMBOL,FIRST_PRICE,FIRST_PRICE_CHANGE,SECOND_NAME,SECOND_SYMBOL,SECOND_PRICE,SECOND_PRICE_CHANGE,THIRD_NAME,THIRD_SYMBOL,THIRD_PRICE,THIRD_PRICE_CHANGE,TIME_UPDATE):
+    #Assigning the variables
+    FIRST_news, FIRST_title_news_link = FIRST_NEWS(FIRST_SYMBOL)
+    SECOND_news, SECOND_title_news_link = SECOND_NEWS(SECOND_SYMBOL)
+    THIRD_news, THIRD_title_news_link = THIRD_NEWS(THIRD_SYMBOL)
+
+    
+    Sender_email = "{-----EMAIL DETAILS-------}"
+    password = "{-----EMAIL DETAILS-------}" 
+
+            
+    #Establishing connetion to the EMAIL table in fabric
+    Email_Data_Path = "{------EMAIL TABLE PATH-------}"
+    Email_Data = spark.read.format("delta").load(Email_Data_Path)
+
+    #Creating a loop to send email to all the people in that table
+    for b in Email_Data.rdd.collect():
+        Reciever_Name = b["Name"]
+        Reciever_Email = b["Email"]
+
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "TOP 3 --- CRYPTO ALERT LEARNING"
+        message["From"] = {-----EMAIL DETAILS-------}
+        message["To"] = {-----EMAIL DETAILS-------} 
+
+        # write the text/plain part
+        text = f"""\
+            Hello {Reciever_Name},
+            Here are the current TOP 3 GAINERS and their details. This data is has been last updated at: {TIME_UPDATE}
+        
+            1.{FIRST_NAME}
+            ALTERNATE Symbol: {FIRST_SYMBOL}
+            24H PERCENTAGE CHANGE OF: {FIRST_PRICE_CHANGE}
+            PRICE: {FIRST_PRICE}
+            LATEST NEWS: {FIRST_news}
+
+            2.{SECOND_NAME}
+            ALTERNATE Symbol: {SECOND_SYMBOL}
+            24H PERCENTAGE CHANGE OF: {SECOND_PRICE_CHANGE}
+            PRICE: {SECOND_PRICE}
+            LATEST NEWS: {SECOND_news}
+
+            3.{THIRD_NAME}
+            ALTERNATE Symbol: {THIRD_SYMBOL}
+            24H PERCENTAGE CHANGE OF: {THIRD_PRICE_CHANGE}
+            PRICE: {THIRD_PRICE}
+            LATEST NEWS: {THIRD_news}
+
+            """
+    
+        # write the HTML part
+        html = f"""\
+            <html>
+            <body>
+            <center>
+                <table style="margin: 0 auto; max-width: 500px;">
+                    <tbody>
+                        <tr>
+                            <td style="font-family: Brown,Helvetica Neue,Helvetica,Arial,sans-serif;font-size:25px; font-weight: 1000"><center><strong>TOP 3 GAINERS CRYPTO ALERTS</strong></td>
+                        </tr>
+                        <tr>
+                            <p>Hello {Reciever_Name},<br>
+                                Here are the current <strong> TOP 3 GAINERS </strong> and their details. This data is has been last updated at: <strong>{TIME_UPDATE}</strong></td>               
+                        </tr>
+                        <tr>
+                            <h3><strong style="color: gold"> 1. {FIRST_NAME}: </strong></h3>
+                                ALTERNATE Symbol: <strong>{FIRST_SYMBOL}</strong><br>
+                                    24H PERCENTAGE CHANGE OF: <strong style="color : green"> {FIRST_PRICE_CHANGE}</strong><strong>%</strong><br>
+                                        PRICE: <strong>${FIRST_PRICE}</strong><br>
+                                            <a href={FIRST_title_news_link}>{FIRST_news}<br></p>
+                        </tr>
+                        <tr>
+                            <h3><strong style="color: silver"> 2. {SECOND_NAME}: </strong></h3>
+                                ALTERNATE Symbol: <strong>{SECOND_SYMBOL}</strong><br>
+                                    24H PERCENTAGE CHANGE OF: <strong style="color : green"> {SECOND_PRICE_CHANGE}</strong><strong>%</strong><br>
+                                        PRICE: <strong>${SECOND_PRICE}</strong><br>
+                                            <a href={SECOND_title_news_link}>{SECOND_news}<br></p>
+                        </tr>
+                        <tr>
+                            <h3><strong style="color: brown"> 3. {THIRD_NAME}: </strong></h3>
+                                ALTERNATE Symbol: <strong>{THIRD_SYMBOL}</strong><br>
+                                    24H PERCENTAGE CHANGE OF: <strong style="color : green"> {THIRD_PRICE_CHANGE}</strong><strong>%</strong><br>
+                                        PRICE: <strong>${THIRD_PRICE}</strong><br>
+                                            <a href={THIRD_title_news_link}>{THIRD_news}<br></p>
+                        </tr>
+                        <tr>
+                            <img src='https://hive3.com/wp-content/uploads/2022/01/2.png' width="200" style="display: block; margin: 0 auto;">
+                    </tbody>
+                </table>
+                <br>
+                <br>
+                <br>
+                </body>
+                </html>
+            """
+
+        #convert both parts to MIMEText objects and add them to the MIMEMultipart message
+        part1 = MIMEText(text, "plain")
+        part2 = MIMEText(html, "html")
+        message.attach(part1)
+        message.attach(part2)
+
+        # sending the email
+        with smtplib.SMTP("smtp-mail.outlook.com", 587) as server:
+
+            server.ehlo('mylowercasehost')
+            server.starttls()
+            server.ehlo('mylowercasehost')
+    
+            server.login(Sender_email, password)
+            server.sendmail(Sender_email,{-----EMAIL DETAILS-------}, message.as_string())
+
+
+            print(f'Email Sent to {Reciever_Name} with the email {Reciever_Email}')
+
+Main_Function()
