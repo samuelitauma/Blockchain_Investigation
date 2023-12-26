@@ -1,0 +1,101 @@
+import requests
+from datetime import datetime
+
+#Insert your API key in the {-----YOUR API KEY------}
+
+def BTChour():
+    #Collecting Data from the Global Bitcoin Price Index - GBX URL
+    url = "https://bitcoinaverage-global-bitcoin-index-v1.p.rapidapi.com/indices/local/ticker/BTCUSD/changes"
+
+    headers = {
+	    "X-RapidAPI-Key": "{-----YOUR API KEY----------}",
+	    "X-RapidAPI-Host": "bitcoinaverage-global-bitcoin-index-v1.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers)
+    JSONresponse = response.json()
+
+    #SPECIFINING the variables 
+    #HOURchange = JSONresponse['changes']['percent']['hour']
+    HOURprice = JSONresponse['open']['hour']
+    RAWtimestamp = JSONresponse['timestamp']
+
+    # Convert to a human-readable date and time
+    RAWdate_time = datetime.utcfromtimestamp(RAWtimestamp)
+    date_time = "'" + str(RAWdate_time) + "'"
+
+    #Saving to data base the data
+    query = f"""
+        INSERT INTO BlockchainAPI.dbo_HOURLY_PRICE_HISTORY 
+        VALUES ('BTC',{HOURprice},{date_time})
+    """
+    
+    # Using spark.sql to execute the query
+    spark.sql(query)
+    print('Success in inserting BTC')
+
+
+def ETHhour():
+    #Collecting Data from the Global Bitcoin Price Index - GBX URL
+    url = "https://bitcoinaverage-global-bitcoin-index-v1.p.rapidapi.com/indices/local/ticker/ETHUSD/changes"
+
+    headers = {
+	    "X-RapidAPI-Key": "{-----YOUR API KEY----------}",
+	    "X-RapidAPI-Host": "bitcoinaverage-global-bitcoin-index-v1.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers)
+    JSONresponse = response.json()
+
+    #SPECIFINING the variables 
+    #HOURchange = JSONresponse['changes']['percent']['hour']
+    HOURprice = JSONresponse['open']['hour']
+    RAWtimestamp = JSONresponse['timestamp']
+
+    # Convert to a human-readable date and time
+    RAWdate_time = datetime.utcfromtimestamp(RAWtimestamp)
+    date_time = "'" + str(RAWdate_time) + "'"
+
+    #Saving to data base the data
+    query = f"""
+        INSERT INTO BlockchainAPI.dbo_HOURLY_PRICE_HISTORY 
+        VALUES ('ETH',{HOURprice},{date_time})
+    """
+
+    # Using spark.sql to execute the query
+    spark.sql(query)
+    print('Success in inserting ETH')
+
+def XRPhour():
+    #Collecting Data from the Global Bitcoin Price Index - GBX URL
+    url = "https://bitcoinaverage-global-bitcoin-index-v1.p.rapidapi.com/indices/local/ticker/XRPUSD/changes"
+
+    headers = {
+	    "X-RapidAPI-Key": "{-----YOUR API KEY----------}",
+	    "X-RapidAPI-Host": "bitcoinaverage-global-bitcoin-index-v1.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers)
+    JSONresponse = response.json()
+
+    #SPECIFINING the variables 
+    HOURprice = JSONresponse['open']['hour']
+    RAWtimestamp = JSONresponse['timestamp']
+
+    # Convert to a human-readable date and time
+    RAWdate_time = datetime.utcfromtimestamp(RAWtimestamp)
+    date_time = "'" + str(RAWdate_time) + "'"
+
+    #Saving to data base the data
+    query = f"""
+        INSERT INTO BlockchainAPI.dbo_HOURLY_PRICE_HISTORY 
+        VALUES ('XRP',{HOURprice},{date_time})
+    """
+    
+    # Using spark.sql to execute the query
+    spark.sql(query)
+    print('Success in inserting XRP')
+
+BTChour()
+XRPhour()
+ETHhour()
